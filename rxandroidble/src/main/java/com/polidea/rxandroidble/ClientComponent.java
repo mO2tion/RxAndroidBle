@@ -36,10 +36,10 @@ import dagger.Binds;
 import dagger.Component;
 import dagger.Module;
 import dagger.Provides;
-import rx.Observable;
-import rx.Scheduler;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
+import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.functions.Function;
+import io.reactivex.schedulers.Schedulers;
 
 @ClientScope
 @Component(modules = {ClientComponent.ClientModule.class, ClientComponent.ClientModuleBinder.class})
@@ -276,7 +276,7 @@ public interface ClientComponent {
         abstract Scheduler bindTimeoutScheduler(@Named(NamedSchedulers.COMPUTATION) Scheduler computationScheduler);
 
         @Binds
-        abstract Func1<RxBleInternalScanResult, ScanResult> provideScanResultMapper(InternalToExternalScanResultConverter mapper);
+        abstract Function<RxBleInternalScanResult, ScanResult> provideScanResultMapper(InternalToExternalScanResultConverter mapper);
     }
 
     LocationServicesOkObservable locationServicesOkObservable();

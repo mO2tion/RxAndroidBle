@@ -28,16 +28,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 
 import dagger.Lazy;
-import rx.Observable;
-import rx.Scheduler;
-import rx.functions.Action0;
-import rx.functions.Func0;
-import rx.functions.Func1;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Scheduler;
+import io.reactivex.functions.Function;
 
 class RxBleClientImpl extends RxBleClient {
 
@@ -46,7 +46,7 @@ class RxBleClientImpl extends RxBleClient {
     private final RxBleDeviceProvider rxBleDeviceProvider;
     private final ScanSetupBuilder scanSetupBuilder;
     private final ScanPreconditionsVerifier scanPreconditionVerifier;
-    private final Func1<RxBleInternalScanResult, ScanResult> internalToExternalScanResultMapFunction;
+    private final Function<RxBleInternalScanResult, ScanResult> internalToExternalScanResultMapFunction;
     private final ClientComponent.ClientComponentFinalizer clientComponentFinalizer;
     private final Scheduler bluetoothInteractionScheduler;
     private final Map<Set<UUID>, Observable<RxBleScanResult>> queuedScanOperations = new HashMap<>();
@@ -65,7 +65,7 @@ class RxBleClientImpl extends RxBleClient {
                     RxBleDeviceProvider rxBleDeviceProvider,
                     ScanSetupBuilder scanSetupBuilder,
                     ScanPreconditionsVerifier scanPreconditionVerifier,
-                    Func1<RxBleInternalScanResult, ScanResult> internalToExternalScanResultMapFunction,
+                    Function<RxBleInternalScanResult, ScanResult> internalToExternalScanResultMapFunction,
                     @Named(ClientComponent.NamedSchedulers.BLUETOOTH_INTERACTION) Scheduler bluetoothInteractionScheduler,
                     ClientComponent.ClientComponentFinalizer clientComponentFinalizer) {
         this.uuidUtil = uuidUtil;
@@ -108,7 +108,7 @@ class RxBleClientImpl extends RxBleClient {
 
     @Override
     public Observable<ScanResult> scanBleDevices(final ScanSettings scanSettings, final ScanFilter... scanFilters) {
-        return Observable.defer(new Func0<Observable<ScanResult>>() {
+        return Observable.defer(new Callable<ObservableSource<? extends ScanResult>>() {
             @Override
             public Observable<ScanResult> call() {
                 scanPreconditionVerifier.verify();
