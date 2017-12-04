@@ -1,11 +1,9 @@
 package com.polidea.rxandroidble.internal
 
 import android.bluetooth.BluetoothDevice
-import android.content.Context
 import com.polidea.rxandroidble.RxBleConnection
 import com.polidea.rxandroidble.RxBleDevice
 import com.polidea.rxandroidble.internal.cache.DeviceComponentCache
-import rx.Observable
 import spock.lang.Specification
 
 import javax.inject.Provider
@@ -21,7 +19,7 @@ class RxBleDeviceProviderTest extends Specification {
         private final String macAddress;
 
         @Override
-        Observable<RxBleConnection.RxBleConnectionState> observeConnectionStateChanges() {
+        io.reactivex.Observable<RxBleConnection.RxBleConnectionState> observeConnectionStateChanges() {
             throw UnsupportedOperationException()
         }
 
@@ -31,18 +29,12 @@ class RxBleDeviceProviderTest extends Specification {
         }
 
         @Override
-        @Deprecated
-        Observable<RxBleConnection> establishConnection(Context context, boolean autoConnect) {
-            establishConnection(autoConnect)
-        }
-
-        @Override
-        Observable<RxBleConnection> establishConnection(boolean autoConnect) {
+        io.reactivex.Observable<RxBleConnection> establishConnection(boolean autoConnect) {
             throw UnsupportedOperationException()
         }
 
 //        @Override
-        Observable<RxBleConnection> establishConnection(ConnectionSetup options) {
+        io.reactivex.Observable<RxBleConnection> establishConnection(ConnectionSetup options) {
             throw UnsupportedOperationException()
         }
 
@@ -128,6 +120,7 @@ class RxBleDeviceProviderTest extends Specification {
         def firstDeviceHashCode = System.identityHashCode(device)
 
         when:
+        //noinspection GroovyUnusedAssignment
         device = null
         System.gc()
 

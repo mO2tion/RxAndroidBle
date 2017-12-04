@@ -7,8 +7,6 @@ import android.location.LocationManager
 import com.polidea.rxandroidble.internal.util.LocationServicesStatus
 import org.robolectric.annotation.Config
 import org.robospock.RoboSpecification
-import rx.Subscription
-import rx.observers.TestSubscriber
 
 @Config(manifest = Config.NONE)
 class LocationServicesOkObservableTest extends RoboSpecification {
@@ -40,10 +38,10 @@ class LocationServicesOkObservableTest extends RoboSpecification {
         given:
         mockLocationServicesStatus.isLocationProviderOk() >> true
         shouldCaptureRegisteredReceiver()
-        Subscription subscription = objectUnderTest.subscribe()
+        def disposable = objectUnderTest.test()
 
         when:
-        subscription.unsubscribe()
+        disposable.dispose()
 
         then:
         1 * contextMock.unregisterReceiver(registeredReceiver)
@@ -54,25 +52,24 @@ class LocationServicesOkObservableTest extends RoboSpecification {
         given:
         shouldCaptureRegisteredReceiver()
         mockLocationServicesStatus.isLocationProviderOk() >>> [true, false, true]
-        TestSubscriber<Boolean> testSubscriber = new TestSubscriber<>()
 
         when:
-        objectUnderTest.subscribe(testSubscriber)
+        def testObserver = objectUnderTest.test()
 
         then:
-        testSubscriber.assertValue(true)
-
-        when:
-        postStateChangeBroadcast()
-
-        then:
-        testSubscriber.assertValues(true, false)
+        testObserver.assertValue(true)
 
         when:
         postStateChangeBroadcast()
 
         then:
-        testSubscriber.assertValues(true, false, true)
+        testObserver.assertValues(true, false)
+
+        when:
+        postStateChangeBroadcast()
+
+        then:
+        testObserver.assertValues(true, false, true)
     }
 
     def "should not emit what LocationServicesStatus.isLocationProviderOk() returns on next broadcasts if the value does not change"() {
@@ -80,43 +77,42 @@ class LocationServicesOkObservableTest extends RoboSpecification {
         given:
         shouldCaptureRegisteredReceiver()
         mockLocationServicesStatus.isLocationProviderOk() >>> [false, false, true, true, false, false]
-        TestSubscriber<Boolean> testSubscriber = new TestSubscriber<>()
 
         when:
-        objectUnderTest.subscribe(testSubscriber)
+        def testObserver = objectUnderTest.test()
 
         then:
-        testSubscriber.assertValue(false)
-
-        when:
-        postStateChangeBroadcast()
-
-        then:
-        testSubscriber.assertValue(false)
+        testObserver.assertValue(false)
 
         when:
         postStateChangeBroadcast()
 
         then:
-        testSubscriber.assertValues(false, true)
+        testObserver.assertValue(false)
 
         when:
         postStateChangeBroadcast()
 
         then:
-        testSubscriber.assertValues(false, true)
+        testObserver.assertValues(false, true)
 
         when:
         postStateChangeBroadcast()
 
         then:
-        testSubscriber.assertValues(false, true, false)
+        testObserver.assertValues(false, true)
 
         when:
         postStateChangeBroadcast()
 
         then:
-        testSubscriber.assertValues(false, true, false)
+        testObserver.assertValues(false, true, false)
+
+        when:
+        postStateChangeBroadcast()
+
+        then:
+        testObserver.assertValues(false, true, false)
     }
 
     public postStateChangeBroadcast() {

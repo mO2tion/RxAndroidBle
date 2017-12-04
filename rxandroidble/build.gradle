@@ -39,7 +39,7 @@ android {
         abortOnError false
     }
 
-    preBuild.dependsOn 'checkstyle'
+//    preBuild.dependsOn 'checkstyle'
 }
 
 androidGroovy {

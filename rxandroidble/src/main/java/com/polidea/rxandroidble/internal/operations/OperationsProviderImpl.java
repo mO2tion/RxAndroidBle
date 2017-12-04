@@ -18,7 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-import rx.Scheduler;
+import io.reactivex.Scheduler;
 
 public class OperationsProviderImpl implements OperationsProvider {
 

@@ -9,9 +9,9 @@ import com.polidea.rxandroidble.internal.serialization.QueueReleaseInterface
 import com.polidea.rxandroidble.internal.connection.RxBleGattCallback
 import com.polidea.rxandroidble.internal.util.ByteAssociation
 import com.polidea.rxandroidble.internal.util.MockOperationTimeoutConfiguration
-import rx.observers.TestSubscriber
-import rx.schedulers.TestScheduler
-import rx.subjects.PublishSubject
+import io.reactivex.subscribers.TestSubscriber
+import io.reactivex.schedulers.TestScheduler
+import io.reactivex.subjects.PublishSubject
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
@@ -39,7 +39,7 @@ public class OperationCharacteristicWriteTest extends Specification {
     def "should call only once BluetoothGattCharacteristic.setValue() before calling BluetoothGatt.writeCharacteristic() on single write when run()"() {
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockCharacteristic.setValue(testData) >> true
@@ -54,7 +54,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         givenCharacteristicWithUUIDWritesData([uuid: mockCharacteristicUUID, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoErrors()
@@ -66,7 +66,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         givenCharacteristicWriteFailToStart()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError BleGattCannotStartException
@@ -84,7 +84,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         shouldEmitErrorOnCharacteristicWrite(testException)
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError testException
@@ -97,7 +97,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         onCharacteristicWriteSubject.onNext(new ByteAssociation(mockCharacteristicUUID, new byte[0]))
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoValues()
@@ -114,7 +114,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         prepareObjectUnderTest()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValue dataFromCharacteristic
@@ -131,7 +131,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         prepareObjectUnderTest()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 1
@@ -146,7 +146,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         givenCharacteristicWithUUIDWritesData([uuid: differentCharacteristicUUID, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 0
@@ -163,7 +163,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         prepareObjectUnderTest()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 1
@@ -178,7 +178,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         givenCharacteristicWithUUIDWritesData([uuid: mockCharacteristicUUID, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -190,7 +190,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         givenCharacteristicWriteFailToStart()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -201,7 +201,7 @@ public class OperationCharacteristicWriteTest extends Specification {
         shouldEmitErrorOnCharacteristicWrite(new Throwable("test"))
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -211,7 +211,7 @@ public class OperationCharacteristicWriteTest extends Specification {
 
         given:
         givenCharacteristicWriteStartsOk()
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         testScheduler.advanceTimeBy(30, TimeUnit.SECONDS)

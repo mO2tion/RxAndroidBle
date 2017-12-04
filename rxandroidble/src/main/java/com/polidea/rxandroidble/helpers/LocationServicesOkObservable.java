@@ -17,11 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
-import rx.Emitter;
-import rx.Observable;
-import rx.functions.Action1;
-import rx.functions.Cancellable;
-import rx.internal.operators.OnSubscribeCreate;
+import io.reactivex.Observable;
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposables;
+import io.reactivex.functions.Action;
 
 /**
  * An Observable that emits false if an attempt to scan with {@link com.polidea.rxandroidble.RxBleClient#scanBleDevices(UUID...)}
@@ -30,6 +29,11 @@ import rx.internal.operators.OnSubscribeCreate;
  * Typically, receiving false should cause the user to be prompted to enable Location Services.
  */
 public class LocationServicesOkObservable extends Observable<Boolean> {
+
+    @NonNull
+    private final Context context;
+    @NonNull
+    private final LocationServicesStatus locationServicesStatus;
 
     public static LocationServicesOkObservable createInstance(@NonNull final Context context) {
         return DaggerClientComponent
@@ -41,36 +45,34 @@ public class LocationServicesOkObservable extends Observable<Boolean> {
 
     @Inject
     LocationServicesOkObservable(@NonNull final Context context, @NonNull final LocationServicesStatus locationServicesStatus) {
-        super(new OnSubscribeCreate<>(
-                new Action1<Emitter<Boolean>>() {
-                    @Override
-                    public void call(final Emitter<Boolean> emitter) {
-                        final boolean locationProviderOk = locationServicesStatus.isLocationProviderOk();
-                        final AtomicBoolean locationProviderOkAtomicBoolean = new AtomicBoolean(locationProviderOk);
-                        emitter.onNext(locationProviderOk);
+        this.context = context;
+        this.locationServicesStatus = locationServicesStatus;
+    }
 
-                        final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
-                            @Override
-                            public void onReceive(Context context, Intent intent) {
-                                final boolean newLocationProviderOkValue = locationServicesStatus.isLocationProviderOk();
-                                final boolean valueChanged = locationProviderOkAtomicBoolean
-                                        .compareAndSet(!newLocationProviderOkValue, newLocationProviderOkValue);
-                                if (valueChanged) {
-                                    emitter.onNext(newLocationProviderOkValue);
-                                }
-                            }
-                        };
+    @Override
+    protected void subscribeActual(final Observer<? super Boolean> observer) {
+        final boolean locationProviderOk = locationServicesStatus.isLocationProviderOk();
+        final AtomicBoolean locationProviderOkAtomicBoolean = new AtomicBoolean(locationProviderOk);
+        observer.onNext(locationProviderOk);
 
-                        context.registerReceiver(broadcastReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
-                        emitter.setCancellation(new Cancellable() {
-                            @Override
-                            public void cancel() throws Exception {
-                                context.unregisterReceiver(broadcastReceiver);
-                            }
-                        });
-                    }
-                },
-                Emitter.BackpressureMode.LATEST
-        ));
+        final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final boolean newLocationProviderOkValue = locationServicesStatus.isLocationProviderOk();
+                final boolean valueChanged = locationProviderOkAtomicBoolean
+                        .compareAndSet(!newLocationProviderOkValue, newLocationProviderOkValue);
+                if (valueChanged) {
+                    observer.onNext(newLocationProviderOkValue);
+                }
+            }
+        };
+
+        context.registerReceiver(broadcastReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
+        observer.onSubscribe(Disposables.fromAction(new Action() {
+            @Override
+            public void run() throws Exception {
+                context.unregisterReceiver(broadcastReceiver);
+            }
+        }));
     }
 }

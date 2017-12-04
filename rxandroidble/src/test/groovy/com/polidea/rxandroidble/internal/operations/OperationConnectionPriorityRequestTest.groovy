@@ -5,8 +5,8 @@ import com.polidea.rxandroidble.exceptions.BleGattCannotStartException
 import com.polidea.rxandroidble.internal.serialization.QueueReleaseInterface
 import com.polidea.rxandroidble.internal.connection.RxBleGattCallback
 import com.polidea.rxandroidble.internal.util.MockOperationTimeoutConfiguration
-import rx.observers.TestSubscriber
-import rx.schedulers.TestScheduler
+import io.reactivex.subscribers.TestSubscriber
+import io.reactivex.schedulers.TestScheduler
 import spock.lang.Specification
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +32,7 @@ class OperationConnectionPriorityRequestTest extends Specification {
 
     def "should call BluetoothGatt.requestConnectionPriority(int) exactly once when run()"() {
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockBluetoothGatt.requestConnectionPriority(_) >> true
@@ -41,13 +41,13 @@ class OperationConnectionPriorityRequestTest extends Specification {
     def "should complete after specified time if BluetoothGatt.requestConnectionPriority() will return true"() {
         given:
         mockBluetoothGatt.requestConnectionPriority(_) >> true
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         testScheduler.advanceTimeBy(completedDelay + 500, delayUnit)
 
         then:
-        testSubscriber.assertCompleted()
+        testSubscriber.assertComplete()
     }
 
     def "should throw exception if operation failed"() {
@@ -55,7 +55,7 @@ class OperationConnectionPriorityRequestTest extends Specification {
         mockBluetoothGatt.requestConnectionPriority(_) >> false
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError BleGattCannotStartException

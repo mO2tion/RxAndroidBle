@@ -11,9 +11,9 @@ import com.polidea.rxandroidble.internal.connection.RxBleGattCallback
 import com.polidea.rxandroidble.internal.util.BleConnectionCompat
 import com.polidea.rxandroidble.internal.util.MockOperationTimeoutConfiguration
 import java.util.concurrent.TimeUnit
-import rx.observers.TestSubscriber
-import rx.schedulers.TestScheduler
-import rx.subjects.PublishSubject
+import io.reactivex.subscribers.TestSubscriber
+import io.reactivex.schedulers.TestScheduler
+import io.reactivex.subjects.PublishSubject
 import spock.lang.Specification
 
 public class OperationConnectTest extends Specification {
@@ -59,7 +59,7 @@ public class OperationConnectTest extends Specification {
     def "asObservable() should not emit onNext before connection is established"() {
 
         given:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         emitConnectingConnectionState()
@@ -71,7 +71,7 @@ public class OperationConnectTest extends Specification {
     def "asObservable() should emit onNext after connection is established"() {
 
         given:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         emitConnectedConnectionState()
@@ -83,7 +83,7 @@ public class OperationConnectTest extends Specification {
     def "asObservable() should emit onNext with BluetoothGatt after connection is established"() {
 
         given:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         emitConnectedConnectionState()
@@ -97,19 +97,19 @@ public class OperationConnectTest extends Specification {
     def "should complete after successful connection"() {
 
         given:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         emitConnectedConnectionState()
 
         then:
-        testSubscriber.assertCompleted()
+        testSubscriber.assertComplete()
     }
 
     def "should release QueueReleaseInterface after successful connection"() {
 
         given:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         emitConnectedConnectionState()
@@ -121,7 +121,7 @@ public class OperationConnectTest extends Specification {
     def "should release QueueReleaseInterface when connection failed"() {
 
         given:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         emitConnectionError(new Throwable("test"))
@@ -133,7 +133,7 @@ public class OperationConnectTest extends Specification {
     def "should release QueueReleaseInterface when unsubscribed before connection is established"() {
 
         given:
-        def asObservableSubscription = objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        def asObservableSubscription = objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         asObservableSubscription.unsubscribe()
@@ -145,7 +145,7 @@ public class OperationConnectTest extends Specification {
     def "should emit BluetoothGattCallbackTimeoutException with a valid mac address on CallbackTimeout"() {
 
         given:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
         mockBluetoothGattProvider.getBluetoothGatt() >> mockGatt
 
         when:

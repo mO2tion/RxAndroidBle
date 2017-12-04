@@ -26,5 +26,4 @@ public class BleConflictingNotificationAlreadySetException extends BleException 
     public boolean notificationAlreadySet() {
         return !alreadySetIsIndication;
     }
-
 }

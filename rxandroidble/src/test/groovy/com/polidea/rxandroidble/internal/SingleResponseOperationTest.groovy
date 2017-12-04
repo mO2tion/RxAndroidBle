@@ -8,15 +8,15 @@ import com.polidea.rxandroidble.internal.connection.RxBleGattCallback
 import com.polidea.rxandroidble.internal.operations.TimeoutConfiguration
 import com.polidea.rxandroidble.internal.serialization.QueueReleaseInterface
 import com.polidea.rxandroidble.internal.util.MockOperationTimeoutConfiguration
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
-import rx.Observable
-import rx.observers.TestSubscriber
-import rx.schedulers.TestScheduler
-import rx.subjects.PublishSubject
+import io.reactivex.Single
+import io.reactivex.schedulers.TestScheduler
+import io.reactivex.subjects.PublishSubject
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
+
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 public class SingleResponseOperationTest extends Specification {
 
@@ -25,8 +25,6 @@ public class SingleResponseOperationTest extends Specification {
     BluetoothGatt mockBluetoothGatt = Mock BluetoothGatt
 
     RxBleGattCallback mockGattCallback = Mock RxBleGattCallback
-
-    TestSubscriber<Object> testSubscriber = new TestSubscriber()
 
     TestScheduler testScheduler = new TestScheduler()
 
@@ -57,7 +55,7 @@ public class SingleResponseOperationTest extends Specification {
         testSubscriber.assertValue(testResult)
 
         and:
-        testSubscriber.assertCompleted()
+        testSubscriber.assertComplete()
     }
 
     @Unroll
@@ -149,8 +147,8 @@ public class SingleResponseOperationTest extends Specification {
 
         where:
         callbackResult << [
-                { rx.Observer<Object> o -> o.onNext(testResult) },
-                { rx.Observer<Object> o -> o.onError(testThrowable) }
+                { Observer<Object> o -> o.onNext(testResult) },
+                { Observer<Object> o -> o.onError(testThrowable) }
         ]
     }
 
@@ -168,7 +166,7 @@ public class SingleResponseOperationTest extends Specification {
     }
 
     private subscribed() {
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
     }
 
     private static class TestSingleResponseOperation extends SingleResponseOperation<Object> {
@@ -191,7 +189,7 @@ public class SingleResponseOperationTest extends Specification {
         }
 
         @Override
-        protected Observable<Object> getCallback(RxBleGattCallback rxBleGattCallback) {
+        protected Single<Object> getCallback(RxBleGattCallback rxBleGattCallback) {
             return callbackSubject
         }
 

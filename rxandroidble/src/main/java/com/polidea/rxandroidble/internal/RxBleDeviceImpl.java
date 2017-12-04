@@ -1,22 +1,22 @@
 package com.polidea.rxandroidble.internal;
 
 import android.bluetooth.BluetoothDevice;
-import android.content.Context;
 import android.support.annotation.Nullable;
 
-import com.jakewharton.rxrelay.BehaviorRelay;
+import com.jakewharton.rxrelay2.BehaviorRelay;
 import com.polidea.rxandroidble.RxBleConnection;
 import com.polidea.rxandroidble.RxBleDevice;
 import com.polidea.rxandroidble.exceptions.BleAlreadyConnectedException;
 import com.polidea.rxandroidble.internal.connection.Connector;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
 
-import rx.Observable;
-import rx.functions.Action0;
-import rx.functions.Func0;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.functions.Action;
 
 @DeviceScope
 class RxBleDeviceImpl implements RxBleDevice {
@@ -48,12 +48,6 @@ class RxBleDeviceImpl implements RxBleDevice {
     }
 
     @Override
-    @Deprecated
-    public Observable<RxBleConnection> establishConnection(Context context, boolean autoConnect) {
-        return establishConnection(autoConnect);
-    }
-
-    @Override
     public Observable<RxBleConnection> establishConnection(final boolean autoConnect) {
         ConnectionSetup options = new ConnectionSetup.Builder()
                 .setAutoConnect(autoConnect)
@@ -64,23 +58,22 @@ class RxBleDeviceImpl implements RxBleDevice {
 
 //    @Override
     public Observable<RxBleConnection> establishConnection(final ConnectionSetup options) {
-        return Observable.defer(new Func0<Observable<RxBleConnection>>() {
-            @Override
-            public Observable<RxBleConnection> call() {
-
-                if (isConnected.compareAndSet(false, true)) {
-                    return connector.prepareConnection(options)
-                            .doOnUnsubscribe(new Action0() {
-                                @Override
-                                public void call() {
-                                    isConnected.set(false);
-                                }
-                            });
-                } else {
-                    return Observable.error(new BleAlreadyConnectedException(bluetoothDevice.getAddress()));
-                }
-            }
-        });
+         return Observable.defer(new Callable<ObservableSource<RxBleConnection>>() {
+             @Override
+             public ObservableSource<RxBleConnection> call() throws Exception {
+                 if (isConnected.compareAndSet(false, true)) {
+                     return connector.prepareConnection(options)
+                             .doFinally(new Action() {
+                                 @Override
+                                 public void run() {
+                                     isConnected.set(false);
+                                 }
+                             });
+                 } else {
+                     return Observable.error(new BleAlreadyConnectedException(bluetoothDevice.getAddress()));
+                 }
+             }
+         });
     }
 
     @Override

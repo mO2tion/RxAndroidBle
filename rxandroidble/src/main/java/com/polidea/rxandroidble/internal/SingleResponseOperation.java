@@ -11,14 +11,15 @@ import com.polidea.rxandroidble.exceptions.BleGattCannotStartException;
 import com.polidea.rxandroidble.exceptions.BleGattOperationType;
 import com.polidea.rxandroidble.internal.connection.RxBleGattCallback;
 import com.polidea.rxandroidble.internal.operations.TimeoutConfiguration;
-
 import com.polidea.rxandroidble.internal.serialization.QueueReleaseInterface;
 import com.polidea.rxandroidble.internal.util.QueueReleasingEmitterWrapper;
+
 import java.util.concurrent.TimeUnit;
-import rx.Emitter;
-import rx.Observable;
-import rx.Scheduler;
-import rx.Subscription;
+
+import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.Scheduler;
+import io.reactivex.Single;
 
 /**
  * A convenience class intended to use with {@link BluetoothGatt} functions that fire one-time actions.
@@ -42,20 +43,20 @@ public abstract class SingleResponseOperation<T> extends QueueOperation<T> {
     }
 
     @Override
-    final protected void protectedRun(final Emitter<T> emitter, final QueueReleaseInterface queueReleaseInterface) throws Throwable {
+    final protected void protectedRun(final ObservableEmitter<T> emitter, final QueueReleaseInterface queueReleaseInterface) throws Throwable {
         final QueueReleasingEmitterWrapper<T> emitterWrapper = new QueueReleasingEmitterWrapper<>(emitter, queueReleaseInterface);
-        Subscription subscription = getCallback(rxBleGattCallback)
-                .first()
+       getCallback(rxBleGattCallback)
                 .timeout(
                         timeoutConfiguration.timeout,
                         timeoutConfiguration.timeoutTimeUnit,
-                        timeoutFallbackProcedure(bluetoothGatt, rxBleGattCallback, timeoutConfiguration.timeoutScheduler),
-                        timeoutConfiguration.timeoutScheduler
+                        timeoutConfiguration.timeoutScheduler,
+                        timeoutFallbackProcedure(bluetoothGatt, rxBleGattCallback, timeoutConfiguration.timeoutScheduler)
                 )
+                .toObservable()
                 .subscribe(emitterWrapper);
 
         if (!startOperation(bluetoothGatt)) {
-            subscription.unsubscribe();
+            emitterWrapper.cancel();
             emitterWrapper.onError(new BleGattCannotStartException(bluetoothGatt, operationType));
         }
     }
@@ -63,14 +64,14 @@ public abstract class SingleResponseOperation<T> extends QueueOperation<T> {
     /**
      * A function that should return {@link Observable} derived from the passed {@link RxBleGattCallback}.
      * The returned {@link Observable} will be automatically unsubscribed after the first emission.
-     * The returned {@link Observable} is a subject to {@link Observable#timeout(long, TimeUnit, Observable, Scheduler)} and by default
-     * it will throw {@link BleGattCallbackTimeoutException}. This behaviour can be overriden by overriding
+     * The returned {@link Observable} is a subject to {@link Observable#timeout(long, TimeUnit, Scheduler, io.reactivex.ObservableSource)}
+     * and by default it will throw {@link BleGattCallbackTimeoutException}. This behaviour can be overridden by overriding
      * {@link #timeoutFallbackProcedure(BluetoothGatt, RxBleGattCallback, Scheduler)}.
      *
      * @param rxBleGattCallback the {@link RxBleGattCallback} to use
      * @return the Observable
      */
-    abstract protected Observable<T> getCallback(RxBleGattCallback rxBleGattCallback);
+    abstract protected Single<T> getCallback(RxBleGattCallback rxBleGattCallback);
 
     /**
      * A function that should call the passed {@link BluetoothGatt} and return `true` if the call has succeeded.
@@ -79,12 +80,13 @@ public abstract class SingleResponseOperation<T> extends QueueOperation<T> {
      */
     abstract protected boolean startOperation(BluetoothGatt bluetoothGatt);
 
-    protected Observable<T> timeoutFallbackProcedure(
+    @SuppressWarnings("unused")
+    protected Single<T> timeoutFallbackProcedure(
             BluetoothGatt bluetoothGatt,
             RxBleGattCallback rxBleGattCallback,
             Scheduler timeoutScheduler
     ) {
-        return Observable.error(new BleGattCallbackTimeoutException(this.bluetoothGatt, operationType));
+        return Single.error(new BleGattCallbackTimeoutException(this.bluetoothGatt, operationType));
     }
 
     @Override

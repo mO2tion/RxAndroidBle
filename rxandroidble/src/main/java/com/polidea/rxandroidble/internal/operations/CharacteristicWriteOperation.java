@@ -13,8 +13,12 @@ import java.util.UUID;
 
 import javax.inject.Named;
 
-import rx.Observable;
-import rx.functions.Func1;
+import io.reactivex.Single;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+
+import static com.polidea.rxandroidble.internal.util.ByteAssociationUtil.characteristicUUIDPredicate;
+import static com.polidea.rxandroidble.internal.util.ByteAssociationUtil.getBytesFromAssociation;
 
 public class CharacteristicWriteOperation extends SingleResponseOperation<byte[]> {
 
@@ -31,21 +35,30 @@ public class CharacteristicWriteOperation extends SingleResponseOperation<byte[]
     }
 
     @Override
-    protected Observable<byte[]> getCallback(RxBleGattCallback rxBleGattCallback) {
+    protected Single<byte[]> getCallback(RxBleGattCallback rxBleGattCallback) {
         return rxBleGattCallback
                 .getOnCharacteristicWrite()
-                .filter(new Func1<ByteAssociation<UUID>, Boolean>() {
+                .filter(characteristicUUIDPredicate(bluetoothGattCharacteristic.getUuid()))
+                .doOnNext(new Consumer<ByteAssociation<UUID>>() {
                     @Override
-                    public Boolean call(ByteAssociation<UUID> uuidPair) {
-                        return uuidPair.first.equals(bluetoothGattCharacteristic.getUuid());
+                    public void accept(ByteAssociation<UUID> uuidByteAssociation) throws Exception {
+                        System.out.println("getOnCharacteristicWrite");
                     }
                 })
-                .map(new Func1<ByteAssociation<UUID>, byte[]>() {
+                .doOnError(new Consumer<Throwable>() {
                     @Override
-                    public byte[] call(ByteAssociation<UUID> uuidPair) {
-                        return uuidPair.second;
+                    public void accept(Throwable uuidByteAssociation) throws Exception {
+                        System.out.println("getOnCharacteristicWrite Throwable");
                     }
-                });
+                })
+                .doOnDispose(new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        System.out.println("doOnDispose ");
+                    }
+                })
+                .firstOrError()
+                .map(getBytesFromAssociation());
     }
 
     @Override

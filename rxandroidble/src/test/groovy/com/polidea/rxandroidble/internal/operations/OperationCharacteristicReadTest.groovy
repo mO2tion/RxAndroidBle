@@ -10,9 +10,9 @@ import com.polidea.rxandroidble.internal.connection.RxBleGattCallback
 import com.polidea.rxandroidble.internal.util.ByteAssociation
 import com.polidea.rxandroidble.internal.util.MockOperationTimeoutConfiguration
 import java.util.concurrent.TimeUnit
-import rx.observers.TestSubscriber
-import rx.schedulers.TestScheduler
-import rx.subjects.PublishSubject
+import io.reactivex.subscribers.TestSubscriber
+import io.reactivex.schedulers.TestScheduler
+import io.reactivex.subjects.PublishSubject
 import spock.lang.Specification
 
 public class OperationCharacteristicReadTest extends Specification {
@@ -38,7 +38,7 @@ public class OperationCharacteristicReadTest extends Specification {
     def "should call BluetoothGatt.readCharacteristic() only once on single read when run()"() {
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockGatt.readCharacteristic(mockCharacteristic) >> true
@@ -50,7 +50,7 @@ public class OperationCharacteristicReadTest extends Specification {
         givenCharacteristicWithUUIDContainData([uuid: mockCharacteristicUUID, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoErrors()
@@ -62,7 +62,7 @@ public class OperationCharacteristicReadTest extends Specification {
         givenCharacteristicReadFailToStart()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError BleGattCannotStartException
@@ -80,7 +80,7 @@ public class OperationCharacteristicReadTest extends Specification {
         shouldEmitErrorOnCharacteristicRead(testException)
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError testException
@@ -93,7 +93,7 @@ public class OperationCharacteristicReadTest extends Specification {
         onCharacteristicReadSubject.onNext(new ByteAssociation(mockCharacteristicUUID, new byte[0]))
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoValues()
@@ -109,7 +109,7 @@ public class OperationCharacteristicReadTest extends Specification {
         givenCharacteristicWithUUIDContainData([uuid: mockCharacteristicUUID, value: dataFromCharacteristic])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValue dataFromCharacteristic
@@ -125,7 +125,7 @@ public class OperationCharacteristicReadTest extends Specification {
                 [uuid: mockCharacteristicUUID, value: secondValueFromCharacteristic])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 1
@@ -140,7 +140,7 @@ public class OperationCharacteristicReadTest extends Specification {
         givenCharacteristicWithUUIDContainData([uuid: differentCharacteristicUUID, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 0
@@ -156,7 +156,7 @@ public class OperationCharacteristicReadTest extends Specification {
                 [uuid: mockCharacteristicUUID, value: secondValueFromCharacteristic])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 1
@@ -171,7 +171,7 @@ public class OperationCharacteristicReadTest extends Specification {
         givenCharacteristicWithUUIDContainData([uuid: mockCharacteristicUUID, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -183,7 +183,7 @@ public class OperationCharacteristicReadTest extends Specification {
         givenCharacteristicReadFailToStart()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -194,7 +194,7 @@ public class OperationCharacteristicReadTest extends Specification {
         shouldEmitErrorOnCharacteristicRead(new Throwable("test"))
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -204,7 +204,7 @@ public class OperationCharacteristicReadTest extends Specification {
 
         given:
         givenCharacteristicReadStartsOk()
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         testScheduler.advanceTimeBy(30, TimeUnit.SECONDS)

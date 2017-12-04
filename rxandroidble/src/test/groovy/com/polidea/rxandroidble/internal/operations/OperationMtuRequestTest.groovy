@@ -7,9 +7,9 @@ import com.polidea.rxandroidble.exceptions.BleGattOperationType
 import com.polidea.rxandroidble.internal.serialization.QueueReleaseInterface
 import com.polidea.rxandroidble.internal.connection.RxBleGattCallback
 import com.polidea.rxandroidble.internal.util.MockOperationTimeoutConfiguration
-import rx.observers.TestSubscriber
-import rx.schedulers.TestScheduler
-import rx.subjects.PublishSubject
+import io.reactivex.subscribers.TestSubscriber
+import io.reactivex.schedulers.TestScheduler
+import io.reactivex.subjects.PublishSubject
 import spock.lang.Specification
 
 import java.util.concurrent.TimeUnit
@@ -35,7 +35,7 @@ public class OperationMtuRequestTest extends Specification {
     def "should call BluetoothGatt.requestMtu(int) exactly once when run()"() {
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockBluetoothGatt.requestMtu(mtu) >> true
@@ -47,7 +47,7 @@ public class OperationMtuRequestTest extends Specification {
         mockBluetoothGatt.requestMtu(72) >> false
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError BleGattCannotStartException
@@ -65,7 +65,7 @@ public class OperationMtuRequestTest extends Specification {
 
         given:
         mockBluetoothGatt.requestMtu(72) >> true
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
         def testException = new Exception("test")
 
         when:
@@ -82,7 +82,7 @@ public class OperationMtuRequestTest extends Specification {
 
         given:
         mockBluetoothGatt.requestMtu(72) >> true
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         testScheduler.advanceTimeTo(timeout + 5, timeoutTimeUnit)

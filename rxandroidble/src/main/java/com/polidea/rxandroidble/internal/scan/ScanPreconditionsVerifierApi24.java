@@ -3,10 +3,14 @@ package com.polidea.rxandroidble.internal.scan;
 
 import com.polidea.rxandroidble.ClientComponent;
 import com.polidea.rxandroidble.exceptions.BleScanException;
+
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 import javax.inject.Named;
-import rx.Scheduler;
+
+import io.reactivex.Scheduler;
 
 public class ScanPreconditionsVerifierApi24 implements ScanPreconditionsVerifier {
 
@@ -16,7 +20,7 @@ public class ScanPreconditionsVerifierApi24 implements ScanPreconditionsVerifier
      */
     private static final int SCANS_LENGTH = 5;
 
-    private static final long EXCESSIVE_SCANNING_PERIOD = 30 * 1000;
+    private static final long EXCESSIVE_SCANNING_PERIOD = TimeUnit.SECONDS.toMillis(30);
 
     private final long[] previousChecks = new long[SCANS_LENGTH];
 
@@ -45,7 +49,7 @@ public class ScanPreconditionsVerifierApi24 implements ScanPreconditionsVerifier
         // TODO: [DS] 27.06.2017 Think if persisting this information through Application close is needed
         final int oldestCheckTimestampIndex = getOldestCheckTimestampIndex();
         final long oldestCheckTimestamp = previousChecks[oldestCheckTimestampIndex];
-        final long currentCheckTimestamp = timeScheduler.now();
+        final long currentCheckTimestamp = timeScheduler.now(TimeUnit.MILLISECONDS);
         if (currentCheckTimestamp - oldestCheckTimestamp < EXCESSIVE_SCANNING_PERIOD) {
             throw new BleScanException(
                     BleScanException.UNDOCUMENTED_SCAN_THROTTLE,

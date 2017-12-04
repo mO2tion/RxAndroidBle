@@ -1,27 +1,22 @@
 package com.polidea.rxandroidble.internal.connection
 
-import static com.polidea.rxandroidble.RxBleAdapterStateObservable.BleAdapterState.STATE_OFF
-import static com.polidea.rxandroidble.RxBleAdapterStateObservable.BleAdapterState.STATE_TURNING_OFF
-import static com.polidea.rxandroidble.RxBleAdapterStateObservable.BleAdapterState.STATE_TURNING_ON
-
 import android.bluetooth.BluetoothGatt
 import com.polidea.rxandroidble.RxBleAdapterStateObservable
 import com.polidea.rxandroidble.exceptions.BleDisconnectedException
 import com.polidea.rxandroidble.exceptions.BleGattException
 import com.polidea.rxandroidble.exceptions.BleGattOperationType
 import com.polidea.rxandroidble.internal.util.RxBleAdapterWrapper
+import io.reactivex.subjects.PublishSubject
 import org.robospock.RoboSpecification
-import rx.observers.TestSubscriber
-import rx.subjects.PublishSubject
 import spock.lang.Unroll
+
+import static com.polidea.rxandroidble.RxBleAdapterStateObservable.BleAdapterState.*
 
 class DisconnectionRouterTest extends RoboSpecification {
 
     String mockMacAddress = "1234"
     PublishSubject<RxBleAdapterStateObservable.BleAdapterState> mockAdapterStateSubject = PublishSubject.create()
     DisconnectionRouter objectUnderTest
-    TestSubscriber errorTestSubscriber = new TestSubscriber()
-    TestSubscriber valueTestSubscriber = new TestSubscriber()
 
     def createObjectUnderTest(boolean isBluetoothAdapterOnInitially) {
         def mockBleAdapterWrapper = Mock(RxBleAdapterWrapper)
@@ -34,8 +29,8 @@ class DisconnectionRouterTest extends RoboSpecification {
         given:
         createObjectUnderTest(true)
         BleDisconnectedException testException = new BleDisconnectedException(mockMacAddress)
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         when:
         objectUnderTest.onDisconnectedException(testException)
@@ -55,7 +50,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         objectUnderTest.onDisconnectedException(testException)
 
         when:
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
 
         then:
         errorTestSubscriber.assertError(testException)
@@ -69,7 +64,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         objectUnderTest.onDisconnectedException(testException)
 
         when:
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         then:
         valueTestSubscriber.assertValue(testException)
@@ -80,8 +75,8 @@ class DisconnectionRouterTest extends RoboSpecification {
         given:
         createObjectUnderTest(true)
         BleGattException testException = new BleGattException(Mock(BluetoothGatt), BluetoothGatt.GATT_FAILURE, BleGattOperationType.CONNECTION_STATE)
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         when:
         objectUnderTest.onGattConnectionStateException(testException)
@@ -101,7 +96,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         objectUnderTest.onGattConnectionStateException(testException)
 
         when:
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
 
         then:
         errorTestSubscriber.assertError(testException)
@@ -115,7 +110,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         objectUnderTest.onGattConnectionStateException(testException)
 
         when:
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         then:
         valueTestSubscriber.assertValue(testException)
@@ -126,8 +121,8 @@ class DisconnectionRouterTest extends RoboSpecification {
 
         given:
         createObjectUnderTest(true)
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         when:
         mockAdapterStateSubject.onNext(bleAdapterState)
@@ -153,7 +148,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         mockAdapterStateSubject.onNext(bleAdapterState)
 
         when:
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
 
         then:
         errorTestSubscriber.assertError({ BleDisconnectedException e -> e.bluetoothDeviceAddress == mockMacAddress })
@@ -170,7 +165,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         mockAdapterStateSubject.onNext(bleAdapterState)
 
         when:
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         then:
         valueTestSubscriber.assertAnyOnNext { BleDisconnectedException e -> e.bluetoothDeviceAddress == mockMacAddress }
@@ -188,7 +183,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         createObjectUnderTest(false)
 
         when:
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
 
         then:
         errorTestSubscriber.assertError({ BleDisconnectedException e -> e.bluetoothDeviceAddress == mockMacAddress })
@@ -200,7 +195,7 @@ class DisconnectionRouterTest extends RoboSpecification {
         createObjectUnderTest(false)
 
         when:
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         then:
         valueTestSubscriber.assertAnyOnNext { BleDisconnectedException e -> e.bluetoothDeviceAddress == mockMacAddress }
@@ -213,8 +208,8 @@ class DisconnectionRouterTest extends RoboSpecification {
 
         given:
         createObjectUnderTest(true)
-        objectUnderTest.asErrorOnlyObservable().subscribe(errorTestSubscriber)
-        objectUnderTest.asValueOnlyObservable().subscribe(valueTestSubscriber)
+        def errorTestSubscriber = objectUnderTest.asErrorOnlyObservable().test()
+        def valueTestSubscriber = objectUnderTest.asValueOnlyObservable().test()
 
         when:
         mockAdapterStateSubject.onNext(RxBleAdapterStateObservable.BleAdapterState.STATE_ON)

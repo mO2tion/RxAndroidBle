@@ -1,10 +1,11 @@
 package com.polidea.rxandroidble.internal.scan
 
 import com.polidea.rxandroidble.exceptions.BleScanException
-import java.util.concurrent.TimeUnit
-import rx.Scheduler
-import rx.schedulers.TestScheduler
+import io.reactivex.Scheduler
+import io.reactivex.schedulers.TestScheduler
 import spock.lang.Specification
+
+import java.util.concurrent.TimeUnit
 
 public class ScanPreconditionsVerifierApi24Test extends Specification {
 

@@ -1,6 +1,6 @@
 package com.polidea.rxandroidble.internal.util
 
-import rx.observers.TestSubscriber
+import io.reactivex.subscribers.TestSubscriber
 import spock.lang.Specification
 
 class ObservableUtilTest extends Specification {
@@ -11,7 +11,7 @@ class ObservableUtilTest extends Specification {
         TestSubscriber testSubscriber = new TestSubscriber()
 
         when:
-        ObservableUtil.justOnNext(someObject).subscribe(testSubscriber)
+        ObservableUtil.justOnNext(someObject).test()
 
         then:
         testSubscriber.assertValue(someObject)

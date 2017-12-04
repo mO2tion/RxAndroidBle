@@ -11,9 +11,9 @@ import com.polidea.rxandroidble.internal.util.ByteAssociation
 import com.polidea.rxandroidble.internal.util.MockOperationTimeoutConfiguration
 
 import java.util.concurrent.TimeUnit
-import rx.observers.TestSubscriber
-import rx.schedulers.TestScheduler
-import rx.subjects.PublishSubject
+import io.reactivex.subscribers.TestSubscriber
+import io.reactivex.schedulers.TestScheduler
+import io.reactivex.subjects.PublishSubject
 import spock.lang.Specification
 
 public class OperationDescriptorReadTest extends Specification {
@@ -45,7 +45,7 @@ public class OperationDescriptorReadTest extends Specification {
     def "should call BluetoothGatt.readDescriptor() only once on single read when run()"() {
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockGatt.readDescriptor(mockDescriptor) >> true
@@ -57,7 +57,7 @@ public class OperationDescriptorReadTest extends Specification {
         givenDescriptorWithUUIDContainData([descriptor: mockDescriptor, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoErrors()
@@ -69,7 +69,7 @@ public class OperationDescriptorReadTest extends Specification {
         givenDescriptorReadFailToStart()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError BleGattCannotStartException
@@ -87,7 +87,7 @@ public class OperationDescriptorReadTest extends Specification {
         shouldEmitErrorOnDescriptorRead(testException)
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError testException
@@ -100,7 +100,7 @@ public class OperationDescriptorReadTest extends Specification {
         onDescriptorReadSubject.onNext(ByteAssociation.create(mockDescriptor, new byte[0]))
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoValues()
@@ -116,7 +116,7 @@ public class OperationDescriptorReadTest extends Specification {
         givenDescriptorWithUUIDContainData([descriptor: mockDescriptor, value: dataFromDescriptor])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValue ByteAssociation.create(mockDescriptor, dataFromDescriptor)
@@ -132,7 +132,7 @@ public class OperationDescriptorReadTest extends Specification {
                 [descriptor: mockDescriptor, value: secondValueFromDescriptor])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 1
@@ -147,7 +147,7 @@ public class OperationDescriptorReadTest extends Specification {
         givenDescriptorWithUUIDContainData([descriptor: differentDescriptor, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 0
@@ -163,7 +163,7 @@ public class OperationDescriptorReadTest extends Specification {
                 [descriptor: mockDescriptor, value: secondValueFromDescriptor])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertValueCount 1
@@ -178,7 +178,7 @@ public class OperationDescriptorReadTest extends Specification {
         givenDescriptorWithUUIDContainData([descriptor: mockDescriptor, value: []])
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -190,7 +190,7 @@ public class OperationDescriptorReadTest extends Specification {
         givenDescriptorReadFailToStart()
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -201,7 +201,7 @@ public class OperationDescriptorReadTest extends Specification {
         shouldEmitErrorOnDescriptorRead(new Throwable("test"))
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockQueueReleaseInterface.release()
@@ -211,7 +211,7 @@ public class OperationDescriptorReadTest extends Specification {
 
         given:
         givenDescriptorReadStartsOk()
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         testScheduler.advanceTimeBy(30, TimeUnit.SECONDS)

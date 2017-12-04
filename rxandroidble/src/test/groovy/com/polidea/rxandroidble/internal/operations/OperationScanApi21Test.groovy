@@ -16,7 +16,7 @@ import com.polidea.rxandroidble.scan.ScanFilter
 import com.polidea.rxandroidble.scan.ScanSettings
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicReference
-import rx.observers.TestSubscriber
+import io.reactivex.subscribers.TestSubscriber
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -54,7 +54,7 @@ public class OperationScanApi21Test extends Specification {
         prepareObjectUnderTest(scanSettings, scanFilters)
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockAndroidScanObjectsCreator.toNativeFilters(scanFilters) >> mockAndroidScanFilters
@@ -73,7 +73,7 @@ public class OperationScanApi21Test extends Specification {
         prepareObjectUnderTest(Mock(ScanSettings), null, null)
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoErrors()
@@ -86,7 +86,7 @@ public class OperationScanApi21Test extends Specification {
         mockAdapterWrapper.startLeScan(_, _, _) >> { _, _1, _2 -> throw new Throwable("test") }
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError(BleScanException)
@@ -98,7 +98,7 @@ public class OperationScanApi21Test extends Specification {
         given:
         prepareObjectUnderTest(Mock(ScanSettings), null, null)
         AtomicReference<ScanCallback> scanCallbackAtomicReference = captureScanCallback()
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
         def mockAndroidScanResult = Mock(ScanResult)
         def mockInternalScanResult = Mock(RxBleInternalScanResult)
         mockEmulatedScanFilterMatecher.matches(_) >> true
@@ -126,7 +126,7 @@ public class OperationScanApi21Test extends Specification {
         given:
         prepareObjectUnderTest(Mock(ScanSettings), null, null)
         AtomicReference<ScanCallback> scanCallbackAtomicReference = captureScanCallback()
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
         def mockAndroidScanResult = Mock(ScanResult)
         def mockInternalScanResult = Mock(RxBleInternalScanResult)
         def mockAndroidScanResult1 = Mock(ScanResult)
@@ -152,7 +152,7 @@ public class OperationScanApi21Test extends Specification {
         def mockInternalScanResult = Mock RxBleInternalScanResult
         mockInternalScanResultCreator.create(_, _) >> mockInternalScanResult
         prepareObjectUnderTest(Mock(ScanSettings), null)
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         capturedLeScanCallbackRef.get().onScanResult(0, Mock(ScanResult))
@@ -174,7 +174,7 @@ public class OperationScanApi21Test extends Specification {
         def mockInternalScanResult = Mock RxBleInternalScanResult
         mockInternalScanResultCreator.create(_) >> mockInternalScanResult
         prepareObjectUnderTest(Mock(ScanSettings), null)
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         when:
         capturedLeScanCallbackRef.get().onBatchScanResults(Arrays.asList(Mock(ScanResult), Mock(ScanResult)))

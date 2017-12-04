@@ -1,11 +1,10 @@
 package com.polidea.rxandroidble.internal.serialization
 
 import com.polidea.rxandroidble.MockOperation
-import rx.Emitter
-import rx.Observable
-import rx.Scheduler
-import rx.observers.TestSubscriber
-import rx.schedulers.Schedulers
+import io.reactivex.ObservableEmitter
+import io.reactivex.Scheduler
+import io.reactivex.schedulers.Schedulers
+import io.reactivex.subscribers.TestSubscriber
 import spock.lang.Specification
 
 import java.util.concurrent.Executors
@@ -95,7 +94,7 @@ class OperationSynchronizerTest extends Specification {
         })
 
         when:
-        objectUnderTest.queue(firstOperation).subscribe(testSubscriber)
+        objectUnderTest.queue(firstOperation).test()
         waitForThreadsToCompleteWork()
 
         then:
@@ -115,14 +114,14 @@ class OperationSynchronizerTest extends Specification {
         })
 
         when:
-        objectUnderTest.queue(firstOperation).subscribe(testSubscriber)
+        objectUnderTest.queue(firstOperation).test()
         waitForThreadsToCompleteWork()
 
         then:
         testSubscriber.assertValue(expectedData)
 
         and:
-        testSubscriber.assertCompleted()
+        testSubscriber.assertComplete()
     }
 
     def "should emit onError and release queue if error occured"() {
@@ -135,7 +134,7 @@ class OperationSynchronizerTest extends Specification {
 
         def secondOperation = new MockOperation(NORMAL, null) {
             @Override
-            void protectedRun(Emitter<Object> emitter, QueueReleaseInterface queueReleaseInterface) {
+            void protectedRun(ObservableEmitter<Object> emitter, QueueReleaseInterface queueReleaseInterface) {
                 // simulate that a not handled exception was thrown somewhere
                 throw new Exception("Second throwable")
             }
@@ -186,7 +185,7 @@ class OperationSynchronizerTest extends Specification {
     }
 
     private static void waitForOperationsToFinishRunning(MockOperation... operations) {
-        Observable<MockOperation> observable
+        io.reactivex.Observable<MockOperation> observable
         for (MockOperation mockOperation : operations) {
             if (observable == null) {
                 observable = mockOperation.getFinishedRunningObservable()

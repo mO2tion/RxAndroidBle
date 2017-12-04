@@ -2,7 +2,7 @@ package com.polidea.rxandroidble.internal;
 
 import android.bluetooth.BluetoothDevice;
 
-import com.jakewharton.rxrelay.BehaviorRelay;
+import com.jakewharton.rxrelay2.BehaviorRelay;
 import com.polidea.rxandroidble.ClientComponent;
 import com.polidea.rxandroidble.ClientComponent.NamedSchedulers;
 import com.polidea.rxandroidble.RxBleConnection;
@@ -17,7 +17,7 @@ import javax.inject.Named;
 
 import dagger.Module;
 import dagger.Provides;
-import rx.Scheduler;
+import io.reactivex.Scheduler;
 
 @Module(subcomponents = ConnectionComponent.class)
 public class DeviceModule {
@@ -68,7 +68,7 @@ public class DeviceModule {
     @Provides
     @DeviceScope
     static BehaviorRelay<RxBleConnection.RxBleConnectionState> provideConnectionStateRelay() {
-        return BehaviorRelay.create(RxBleConnection.RxBleConnectionState.DISCONNECTED);
+        return BehaviorRelay.createDefault(RxBleConnection.RxBleConnectionState.DISCONNECTED);
     }
 
     @Provides
@@ -79,7 +79,7 @@ public class DeviceModule {
         return new ConnectionStateChangeListener() {
             @Override
             public void onConnectionStateChange(RxBleConnection.RxBleConnectionState rxBleConnectionState) {
-                connectionStateBehaviorRelay.call(rxBleConnectionState);
+                connectionStateBehaviorRelay.accept(rxBleConnectionState);
             }
         };
     }

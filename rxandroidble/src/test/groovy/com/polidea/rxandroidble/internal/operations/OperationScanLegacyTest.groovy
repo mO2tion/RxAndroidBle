@@ -7,11 +7,12 @@ import com.polidea.rxandroidble.exceptions.BleScanException
 import com.polidea.rxandroidble.internal.serialization.QueueReleaseInterface
 import com.polidea.rxandroidble.internal.util.RxBleAdapterWrapper
 import com.polidea.rxandroidble.internal.util.UUIDUtil
-import java.util.concurrent.Semaphore
-import java.util.concurrent.atomic.AtomicReference
-import rx.observers.TestSubscriber
+import io.reactivex.subscribers.TestSubscriber
 import spock.lang.Specification
 import spock.lang.Unroll
+
+import java.util.concurrent.Semaphore
+import java.util.concurrent.atomic.AtomicReference
 
 public class OperationScanLegacyTest extends Specification {
 
@@ -34,7 +35,7 @@ public class OperationScanLegacyTest extends Specification {
     def "should call RxBleAdapterWrapper.startScan() when run()"() {
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         1 * mockAdapterWrapper.startLegacyLeScan(_) >> true
@@ -46,7 +47,7 @@ public class OperationScanLegacyTest extends Specification {
         mockAdapterWrapper.startLegacyLeScan(_) >> true
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertNoErrors()
@@ -58,7 +59,7 @@ public class OperationScanLegacyTest extends Specification {
         mockAdapterWrapper.startLegacyLeScan(_) >> false
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         testSubscriber.assertError(BleScanException)
@@ -73,7 +74,7 @@ public class OperationScanLegacyTest extends Specification {
             true
         }) >> true
 
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
         def scannedDevice = mockBluetoothDevice
         def scannedBytes = new byte[5]
         def scannedRssi = 5
@@ -96,7 +97,7 @@ public class OperationScanLegacyTest extends Specification {
         mockAdapterWrapper.startLegacyLeScan(_) >> startScanResult
 
         when:
-        objectUnderTest.run(mockQueueReleaseInterface).subscribe(testSubscriber)
+        objectUnderTest.run(mockQueueReleaseInterface).test()
 
         then:
         (1.._) * mockQueueReleaseInterface.release()

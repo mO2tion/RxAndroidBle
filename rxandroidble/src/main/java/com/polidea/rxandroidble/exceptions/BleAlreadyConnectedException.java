@@ -8,5 +8,4 @@ public class BleAlreadyConnectedException extends BleException {
         super("Already connected to device with MAC address " + macAddress);
         this.macAddress = macAddress;
     }
-
 }
