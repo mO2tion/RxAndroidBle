@@ -36,7 +36,7 @@ public class LegacyScanOperation extends ScanOperation<RxBleInternalScanResultLe
             @Override
             public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
 
-                if (!isFilterDefined || uuidUtil.extractUUIDs(scanRecord).containsAll(filterUuids)) {
+                if (!isFilterDefined || !Collections.disjoint(uuidUtil.extractUUIDs(scanRecord), filterUuids)) {
                     emitter.onNext(new RxBleInternalScanResultLegacy(device, rssi, scanRecord));
                 }
             }
